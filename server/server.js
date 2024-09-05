@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import authRoute from "./routes/auth.route.js";
 import userRoute from "./routes/user.route.js";
 import postRoute from "./routes/post.route.js";
+import notificationRoute from "./routes/notification.route.js";
 import connectDatabase from "./utils/connectDatabase.js";
 import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";
@@ -24,6 +25,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRoute);
 app.use("/api/user", userRoute);
 app.use("/api/post", postRoute);
+app.use("/api/notification", notificationRoute);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is up and running!`);
