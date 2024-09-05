@@ -1,7 +1,7 @@
-import User from "../models/user.model.js";
-import Notification from "../models/notification.model.js";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
+import Notification from "../models/notification.model.js";
+import User from "../models/user.model.js";
 
 export const getUserProfile = async (req, res) => {
   const { username } = req.params; // Lấy tên người dùng từ tham số URL
@@ -100,6 +100,7 @@ export const updateProfileUser = async (req, res) => {
   const {
     firstName,
     lastName,
+    dob,
     username,
     currentPassword,
     newPassword,
@@ -158,6 +159,7 @@ export const updateProfileUser = async (req, res) => {
 
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
+    user.dob = dob || user.dob;
     user.username = username || user.username;
     user.email = email || user.email;
     user.phoneNumber = phoneNumber || user.phoneNumber;

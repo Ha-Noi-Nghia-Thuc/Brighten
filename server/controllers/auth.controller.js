@@ -1,5 +1,4 @@
 import bcrypt from "bcryptjs";
-
 import User from "../models/user.model.js";
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
 
@@ -9,6 +8,8 @@ export const registerController = async (req, res) => {
     const {
       firstName,
       lastName,
+      gender,
+      dob,
       username,
       password,
       secretAnswer,
@@ -28,6 +29,11 @@ export const registerController = async (req, res) => {
       return res.status(400).json({ error: "Username is already taken" });
     }
 
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ error: "Password must be at least 6 characters" });
+    }
     // Băm mật khẩu bằng bcrypt
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -58,6 +64,8 @@ export const registerController = async (req, res) => {
     const newUser = new User({
       firstName,
       lastName,
+      gender,
+      dob,
       username,
       password: hashedPassword,
       secretAnswer,
@@ -83,6 +91,8 @@ export const registerController = async (req, res) => {
       firstName: newUser.firstName,
       lastName: newUser.lastName,
       username: newUser.username,
+      gender: newUser.gender,
+      dob: newUser.dob,
       email: newUser.email,
       phoneNumber: newUser.phoneNumber,
       address: newUser.address,
@@ -132,6 +142,8 @@ export const loginController = async (req, res) => {
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
+      gender: user.gender,
+      dob: user.dob,
       username: user.username,
       email: user.email,
       phoneNumber: user.phoneNumber,
