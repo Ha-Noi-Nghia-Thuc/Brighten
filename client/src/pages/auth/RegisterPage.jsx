@@ -24,6 +24,14 @@ const RegisterPage = () => {
         city: ""
     });
 
+    const securityQuestions = [
+        "Where did you share your first kiss?",
+        "What is the name of the place where you met your first love?",
+        "What was the first gift you gave to someone you loved?",
+        "What was the most romantic meal you've ever had?",
+        "What is the nickname of someone you hold dear?"
+    ];
+
     const nextStep = () => setStep(prev => prev + 1);
     const prevStep = () => setStep(prev => prev - 1);
 
@@ -155,10 +163,18 @@ const RegisterPage = () => {
                                 <div className="label">
                                     <span className="label-text font-semibold">Security Question</span>
                                 </div>
-                                <select className="select w-full max-w-xs focus:outline-none">
-                                    <option disabled selected>Choose a security question</option>
-                                    <option>What is your favorite movie?</option>
-                                    <option>What is your pet&apos;s name?</option>
+                                <select
+                                    className="select select-bordered w-full focus:outline-none"
+                                    name="secretQuestion"
+                                    value={formData.secretQuestion}
+                                    onChange={handleInputChange}
+                                >
+                                    <option disabled>Select a security question</option>
+                                    {securityQuestions.map((question, index) => (
+                                        <option key={index} value={question}>
+                                            {question}
+                                        </option>
+                                    ))}
                                 </select>
                                 <input type="text" name='secretAnswer' onChange={handleInputChange} value={formData.secretAnswer} placeholder="Answer here" className="input input-bordered w-full max-w-xs focus:outline-none" />
                             </label>
