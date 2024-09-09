@@ -4,7 +4,7 @@ import { IoHomeOutline, IoPersonOutline, IoHeartOutline, IoAddOutline, IoSetting
 const Sidebar = () => {
     return (
         <div className='hidden md:block md:flex-[2_2_0] w-18 max-w-72'>
-            <div className='sticky py-4 top-0 left-0 h-screen flex flex-col justify-between border-r border-gray-700 w-20 md:w-full'>
+            <div className='sticky py-4 top-0 left-0 h-screen flex flex-col justify-between w-20 md:w-full'>
                 {/* Logo Section */}
                 <div className='flex justify-start'>
                     <Link to='/' className='text-2xl font-bold'>
@@ -30,6 +30,7 @@ const Sidebar = () => {
                         </li>
                         <li className='flex justify-start'>
                             <button
+                                onClick={() => document.getElementById('createPostModal').showModal()}
                                 className='btn btn-outline flex gap-3 items-center transition-all duration-300 py-2 cursor-pointer'
                             >
                                 <IoAddOutline className='w-7 h-7' />
@@ -54,7 +55,7 @@ const Sidebar = () => {
 
                 {/* Settings Section */}
                 <div className="flex flex-col items-start gap-3 flex-grow justify-center dropdown dropdown-top">
-                    <div tabIndex={0} role="button" className="btn m-1"><IoSettingsOutline className='w-7 h-7' /></div>
+                    <div tabIndex={0} role="button" className="btn"><IoSettingsOutline className='w-7 h-7' /></div>
                     <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
                         <li><a>Logout</a></li>
                     </ul>

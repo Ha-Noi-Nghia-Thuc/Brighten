@@ -1,6 +1,7 @@
 import { useState } from "react";
 import CreatePost from "../components/post/CreatePost";
 import Posts from "../components/post/Posts";
+import CreatePostModal from "../components/post/CreatePostModal";
 
 const HomePage = () => {
     const [feedType, setFeedType] = useState("forYou");
@@ -18,9 +19,9 @@ const HomePage = () => {
     ];
 
     return (
-        <div className="flex-[4_4_0] mr-auto border-r border-gray-700 min-h-screen max-w-screen-sm">
+        <div className="flex-[4_4_0] mr-auto min-h-screen max-w-screen-sm">
             {/* Header */}
-            <div className="flex w-full justify-center items-center pt-5 pb-28 border-b border-gray-700">
+            <div className="flex w-full justify-center items-center pt-5 pb-14 border-b border-gray-700">
                 <div className="relative">
                     {/* Dropdown Button */}
                     <div
@@ -83,6 +84,7 @@ const HomePage = () => {
 
             {/* CREATE POST INPUT */}
             <CreatePost />
+            <CreatePostModal />
 
             {/* POSTS */}
             <Posts />
