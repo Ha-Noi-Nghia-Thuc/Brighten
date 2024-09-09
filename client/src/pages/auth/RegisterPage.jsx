@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const RegisterPage = () => {
     const [step, setStep] = useState(1);
@@ -21,7 +23,7 @@ const RegisterPage = () => {
         address: "",
         ward: "",
         district: "",
-        city: ""
+        city: "",
     });
 
     const securityQuestions = [
@@ -29,35 +31,40 @@ const RegisterPage = () => {
         "What is the name of the place where you met your first love?",
         "What was the first gift you gave to someone you loved?",
         "What was the most romantic meal you've ever had?",
-        "What is the nickname of someone you hold dear?"
+        "What is the nickname of someone you hold dear?",
     ];
 
-    const nextStep = () => setStep(prev => prev + 1);
-    const prevStep = () => setStep(prev => prev - 1);
+    const nextStep = () => setStep((prev) => prev + 1);
+    const prevStep = () => setStep((prev) => prev - 1);
 
     useEffect(() => {
         // Fetch cities
-        axios.get('https://provinces.open-api.vn/api/?depth=1')
-            .then(response => setCities(response.data))
-            .catch(error => console.error('Error fetching cities:', error));
+        axios
+            .get("https://provinces.open-api.vn/api/?depth=1")
+            .then((response) => setCities(response.data))
+            .catch((error) => console.error("Error fetching cities:", error));
     }, []);
 
     const fetchDistricts = async (cityCode) => {
         try {
-            const response = await axios.get(`https://provinces.open-api.vn/api/p/${cityCode}?depth=2`);
+            const response = await axios.get(
+                `https://provinces.open-api.vn/api/p/${cityCode}?depth=2`
+            );
             setDistricts(response.data.districts);
             setWards([]);
         } catch (error) {
-            console.error('Error fetching districts:', error);
+            console.error("Error fetching districts:", error);
         }
     };
 
     const fetchWards = async (districtCode) => {
         try {
-            const response = await axios.get(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+            const response = await axios.get(
+                `https://provinces.open-api.vn/api/d/${districtCode}?depth=2`
+            );
             setWards(response.data.wards);
         } catch (error) {
-            console.error('Error fetching wards:', error);
+            console.error("Error fetching wards:", error);
         }
     };
 
@@ -80,20 +87,86 @@ const RegisterPage = () => {
         setFormData({ ...formData, ward: e.target.value });
     };
 
+
+    const handleGenderChange = (e) => {
+        setFormData({
+            ...formData, gender: e.target.value
+        })
+    }
+
+    const { mutate, isPending } = useMutation({
+        mutationFn: async ({
+            firstName,
+            lastName,
+            gender,
+            dob,
+            username,
+            password,
+            secretAnswer,
+            email,
+            phoneNumber,
+            address,
+            ward,
+            district,
+            city,
+        }) => {
+            try {
+                const res = await fetch("/api/auth/register", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        firstName,
+                        lastName,
+                        gender,
+                        dob,
+                        username,
+                        password,
+                        secretAnswer,
+                        email,
+                        phoneNumber,
+                        address,
+                        ward,
+                        district,
+                        city,
+                    }),
+                });
+
+                const data = await res.json()
+
+                if (!res.ok) {
+                    throw new Error(data.error || "Something went wrong")
+                }
+
+                console.log(data)
+
+            } catch (error) {
+                console.log(error)
+                toast.error(error.message)
+            }
+        },
+        onSuccess: () => {
+            toast.success("Account created successfully")
+        }
+    });
+
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log(formData);
+        mutate(formData)
     };
-
 
     return (
         <div className="my-5 w-screen flex flex-col items-center justify-center">
             <h1 className="text-2xl font-bold">Create Your Account</h1>
-            <form onSubmit={handleSubmit} className="w-full max-w-4xl flex flex-col items-center space-y-8">
+            <form
+                onSubmit={handleSubmit}
+                className="w-full max-w-4xl flex flex-col items-center space-y-8"
+            >
                 <div className="w-full">
                     {step === 1 && (
                         <div className="flex flex-col gap-y-2 items-center justify-center w-full p-6 bg-white shadow-md rounded-lg">
@@ -103,37 +176,77 @@ const RegisterPage = () => {
                                 <div className="label">
                                     <span className="label-text font-semibold">First Name</span>
                                 </div>
-                                <input type="text" name='firstName' onChange={handleInputChange} value={formData.firstName} placeholder="First name" className="input input-bordered w-full max-w-xs focus:outline-none" />
+                                <input
+                                    type="text"
+                                    name="firstName"
+                                    onChange={handleInputChange}
+                                    value={formData.firstName}
+                                    placeholder="First name"
+                                    className="input input-bordered w-full max-w-xs focus:outline-none"
+                                />
                             </label>
                             <label className="form-control w-full max-w-xs">
                                 <div className="label">
                                     <span className="label-text font-semibold">Last Name</span>
                                 </div>
-                                <input type="text" name='lastName' onChange={handleInputChange} value={formData.lastName} placeholder="Last name" className="input input-bordered w-full max-w-xs focus:outline-none" />
+                                <input
+                                    type="text"
+                                    name="lastName"
+                                    onChange={handleInputChange}
+                                    value={formData.lastName}
+                                    placeholder="Last name"
+                                    className="input input-bordered w-full max-w-xs focus:outline-none"
+                                />
                             </label>
                             <label className="form-control w-full max-w-xs">
                                 <div className="label">
                                     <span className="label-text font-semibold">Gender</span>
                                 </div>
-                                <select className="select select-bordered w-full max-w-xs" value={formData.gender}>
-                                    <option disabled selected>Select gender</option>
-                                    <option>Male</option>
-                                    <option>Female</option>
+                                <select
+                                    className="select select-bordered w-full max-w-xs"
+                                    value={formData.gender}  // Ensure it's controlled by formData
+                                    onChange={handleGenderChange}  // Ensure state updates on change
+                                    required  // Optional: Mark field as required
+                                >
+                                    <option value="" disabled>
+                                        Select gender
+                                    </option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
                                 </select>
                             </label>
+
                             <label className="form-control w-full max-w-xs">
                                 <div className="label">
                                     <span className="label-text font-semibold">Birthday</span>
                                 </div>
-                                <input type="date" name='dob' onChange={handleInputChange} value={formData.dob} className="input input-bordered w-full max-w-xs focus:outline-none" />
+                                <input
+                                    type="date"
+                                    name="dob"
+                                    onChange={handleInputChange}
+                                    value={formData.dob}
+                                    className="input input-bordered w-full max-w-xs focus:outline-none"
+                                />
                             </label>
                             <label className="form-control w-full max-w-xs">
                                 <div className="label">
                                     <span className="label-text font-semibold">Phone Number</span>
                                 </div>
-                                <input type="text" name='phoneNumber' onChange={handleInputChange} value={formData.phoneNumber} placeholder="(+84)989xxxxxx" className="input input-bordered w-full max-w-xs focus:outline-none" />
+                                <input
+                                    type="text"
+                                    name="phoneNumber"
+                                    onChange={handleInputChange}
+                                    value={formData.phoneNumber}
+                                    placeholder="(+84)989xxxxxx"
+                                    className="input input-bordered w-full max-w-xs focus:outline-none"
+                                />
                             </label>
-                            <button onClick={nextStep} className="btn btn-outline btn-success mt-3">Next</button>
+                            <button
+                                onClick={nextStep}
+                                className="btn btn-outline btn-success mt-3"
+                            >
+                                Next
+                            </button>
                         </div>
                     )}
 
@@ -145,23 +258,46 @@ const RegisterPage = () => {
                                 <div className="label">
                                     <span className="label-text font-semibold">Email</span>
                                 </div>
-                                <input type="email" name='email' onChange={handleInputChange} value={formData.email} placeholder="example@mail.com" className="input input-bordered w-full max-w-xs focus:outline-none" />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    onChange={handleInputChange}
+                                    value={formData.email}
+                                    placeholder="example@mail.com"
+                                    className="input input-bordered w-full max-w-xs focus:outline-none"
+                                />
                             </label>
                             <label className="form-control w-full max-w-xs">
                                 <div className="label">
                                     <span className="label-text font-semibold">Username</span>
                                 </div>
-                                <input type="text" name='username' onChange={handleInputChange} value={formData.username} placeholder="Username" className="input input-bordered w-full max-w-xs focus:outline-none" />
+                                <input
+                                    type="text"
+                                    name="username"
+                                    onChange={handleInputChange}
+                                    value={formData.username}
+                                    placeholder="Username"
+                                    className="input input-bordered w-full max-w-xs focus:outline-none"
+                                />
                             </label>
                             <label className="form-control w-full max-w-xs">
                                 <div className="label">
                                     <span className="label-text font-semibold">Password</span>
                                 </div>
-                                <input type="text" name='password' onChange={handleInputChange} value={formData.password} placeholder="Password (min. 6 characters)" className="input input-bordered w-full max-w-xs focus:outline-none" />
+                                <input
+                                    type="text"
+                                    name="password"
+                                    onChange={handleInputChange}
+                                    value={formData.password}
+                                    placeholder="Password (min. 6 characters)"
+                                    className="input input-bordered w-full max-w-xs focus:outline-none"
+                                />
                             </label>
                             <label className="form-control w-full max-w-xs">
                                 <div className="label">
-                                    <span className="label-text font-semibold">Security Question</span>
+                                    <span className="label-text font-semibold">
+                                        Security Question
+                                    </span>
                                 </div>
                                 <select
                                     className="select select-bordered w-full focus:outline-none"
@@ -176,11 +312,28 @@ const RegisterPage = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <input type="text" name='secretAnswer' onChange={handleInputChange} value={formData.secretAnswer} placeholder="Answer here" className="input input-bordered w-full max-w-xs focus:outline-none" />
+                                <input
+                                    type="text"
+                                    name="secretAnswer"
+                                    onChange={handleInputChange}
+                                    value={formData.secretAnswer}
+                                    placeholder="Answer here"
+                                    className="input input-bordered w-full max-w-xs focus:outline-none"
+                                />
                             </label>
                             <div className="flex space-x-4 mt-3">
-                                <button onClick={prevStep} className="btn btn-outline btn-warning">Previous</button>
-                                <button onClick={nextStep} className="btn btn-outline btn-success">Next</button>
+                                <button
+                                    onClick={prevStep}
+                                    className="btn btn-outline btn-warning"
+                                >
+                                    Previous
+                                </button>
+                                <button
+                                    onClick={nextStep}
+                                    className="btn btn-outline btn-success"
+                                >
+                                    Next
+                                </button>
                             </div>
                         </div>
                     )}
@@ -194,8 +347,13 @@ const RegisterPage = () => {
                                 <div className="label">
                                     <span className="label-text font-semibold">Country</span>
                                 </div>
-                                <select className="select select-bordered w-full max-w-xs focus:outline-none" disabled>
-                                    <option disabled selected>Vietnam</option>
+                                <select
+                                    className="select select-bordered w-full max-w-xs focus:outline-none"
+                                    disabled
+                                >
+                                    <option disabled selected>
+                                        Vietnam
+                                    </option>
                                 </select>
                             </label>
                             {/* City */}
@@ -285,14 +443,26 @@ const RegisterPage = () => {
                                 />
                             </label>
                             <div className="flex space-x-4 mt-3">
-                                <button onClick={prevStep} className="btn btn-outline btn-warning">Previous</button>
-                                <button className="btn btn-outline btn-success">Register</button>
+                                <button
+                                    onClick={prevStep}
+                                    className="btn btn-outline btn-warning"
+                                >
+                                    Previous
+                                </button>
+                                <button className="btn btn-outline btn-success">
+                                    {isPending ? "Loading..." : "Register"}
+                                </button>
                             </div>
                         </div>
                     )}
                 </div>
             </form>
-            <p className='mt-3'>Already have an account? <Link to="/login" className='underline'>Login</Link></p>
+            <p className="mt-3">
+                Already have an account?{" "}
+                <Link to="/login" className="underline">
+                    Login
+                </Link>
+            </p>
         </div>
     );
 };

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const LoginPage = () => {
     const [formData, setFormData] = useState({
@@ -7,13 +8,41 @@ const LoginPage = () => {
         password: "",
     });
 
+    const queryClient = useQueryClient()
+
+
+    const { mutate: loginMutation, isPending, isError, error } = useMutation({
+        mutationFn: async ({ username, password }) => {
+            try {
+                const res = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username, password })
+                })
+
+                const data = await res.json()
+
+                if (!res.ok) {
+                    throw new Error(data.error || "Something went wrong")
+                }
+            } catch (error) {
+                throw new Error(error)
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["authUser"] })
+        }
+    })
+
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log(formData);
+        loginMutation(formData)
     };
 
 
@@ -35,8 +64,9 @@ const LoginPage = () => {
                             </div>
                             <input type="password" name='password' onChange={handleInputChange} value={formData.password} placeholder="Password" className="input input-bordered w-full max-w-xs focus:outline-none" />
                         </label>
+                        {isError && <p className='text-red-500'>{error.message}</p>}
                         <div className="flex space-x-4 mt-3">
-                            <button className="btn btn-outline btn-success">Login</button>
+                            <button className="btn btn-outline btn-success">{isPending ? "Loading..." : "Login"}</button>
                         </div>
                     </div>
                 </div>
