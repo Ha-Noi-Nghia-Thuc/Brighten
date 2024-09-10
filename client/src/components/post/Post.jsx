@@ -1,5 +1,5 @@
 import { IoChatbubblesOutline, IoRepeatOutline, IoHeartOutline, IoBookmarkOutline, IoTrashOutline } from "react-icons/io5";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -13,7 +13,7 @@ const Post = ({ post }) => {
 
     const queryClient = useQueryClient()
 
-    const { mutate: deletePost, isPending } = useMutation({
+    const { mutate: deletePost, isPending: isDeleting } = useMutation({
         mutationFn: async () => {
             try {
                 const res = await fetch(`/api/post/${post._id}`, {
@@ -38,8 +38,42 @@ const Post = ({ post }) => {
         }
     })
 
+    const { mutate: likePost, isPending: isLiking } = useMutation({
+        mutationFn: async () => {
+            try {
+                const res = await fetch(`/api/post/like/${post._id}`, {
+                    method: "POST"
+                })
+
+                const data = await res.json()
+
+                if (!res.ok) {
+                    throw new Error(data.error || "Something went wrong")
+                }
+
+                return data
+            } catch (error) {
+                throw new Error(error)
+            }
+        },
+        onSuccess: (updatedLikes) => {
+            // queryClient.invalidateQueries({ queryKey: ["posts"] })
+            queryClient.setQueryData(["posts"], (oldData) => {
+                return oldData.map((p) => {
+                    if (p._id === post._id) {
+                        return { ...p, likes: updatedLikes }
+                    }
+                    return p
+                })
+            })
+        },
+        onError: (error) => {
+            toast.error(error.message)
+        }
+    })
+
     const postOwner = post.user;
-    const isLiked = false;
+    const isLiked = Array.isArray(post.likes) && post.likes.includes(authUser._id);
 
     const textareaRef = useRef(null);
 
@@ -49,16 +83,11 @@ const Post = ({ post }) => {
         textarea.style.height = `${textarea.scrollHeight}px`;  // Set to content height
     };
 
-
-    useEffect(() => {
-        autoResizeTextarea();  // Auto-resize on component mount and when the text changes
-    }, [comment]);
-
     const isMyPost = authUser._id === post.user._id;
 
     const formattedDate = "1h";
 
-    const isCommenting = false;
+    const isCommenting = true;
 
     const handleDeletePost = () => {
         deletePost()
@@ -68,7 +97,12 @@ const Post = ({ post }) => {
         e.preventDefault();
     };
 
-    const handleLikePost = () => { };
+    const handleLikePost = () => {
+        if (isLiking) {
+            return
+        }
+        likePost()
+    };
 
     return (
         <>
@@ -90,8 +124,8 @@ const Post = ({ post }) => {
                         </span>
                         {isMyPost && (
                             <span className='flex justify-end flex-1'>
-                                {!isPending && <IoTrashOutline className='cursor-pointer hover:text-red-500' onClick={handleDeletePost} />}
-                                {isPending && <h1>Loading...</h1>}
+                                {!isDeleting && <IoTrashOutline className='cursor-pointer hover:text-red-500' onClick={handleDeletePost} />}
+                                {isDeleting && <h1>Loading...</h1>}
                             </span>
                         )}
                     </div>
@@ -157,7 +191,10 @@ const Post = ({ post }) => {
                                             className='textarea w-full p-1 rounded text-md resize-none border focus:outline-none  border-gray-800'
                                             placeholder='Add a comment...'
                                             value={comment}
-                                            onChange={(e) => setComment(e.target.value)}
+                                            onChange={(e) => {
+                                                setComment(e.target.value);
+                                                autoResizeTextarea();
+                                            }}
                                             style={{ overflow: 'hidden' }}
                                         />
                                         <button className='btn btn-primary rounded-full btn-sm text-white px-4'>
@@ -184,10 +221,11 @@ const Post = ({ post }) => {
 
                             {/* Like section start */}
                             <div className='flex gap-1 items-center group cursor-pointer' onClick={handleLikePost}>
-                                {!isLiked && (
+                                {isLiking && <h1>Loading...</h1>}
+                                {!isLiked && !isLiking && (
                                     <IoHeartOutline className='w-4 h-4 cursor-pointer text-slate-500 group-hover:text-red-600' />
                                 )}
-                                {isLiked && <IoHeartOutline className='w-4 h-4 cursor-pointer text-red-600 ' />}
+                                {isLiked && !isLiking && <IoHeartOutline className='w-4 h-4 cursor-pointer text-red-600 ' />}
 
                                 <span
                                     className={`text-sm text-slate-500 group-hover:text-red-600 ${isLiked ? "text-red-600" : ""
