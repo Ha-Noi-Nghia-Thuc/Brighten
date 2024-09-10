@@ -87,7 +87,7 @@ const HomePage = () => {
             <CreatePostModal />
 
             {/* POSTS */}
-            <Posts />
+            <Posts feedType={feedType} />
         </div>
     );
 };
