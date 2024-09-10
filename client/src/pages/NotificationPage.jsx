@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { IoSettingsOutline } from "react-icons/io5";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const NotificationPage = () => {
     const [feedType, setFeedType] = useState("activity");
@@ -16,31 +18,49 @@ const NotificationPage = () => {
         { type: "request", label: "Requests" },
     ];
 
-    const isLoading = false;
-    const notifications = [
-        {
-            _id: "1",
-            from: {
-                _id: "1",
-                username: "johndoe",
-                profileImg: "/avatars/boy2.png",
-            },
-            type: "follow",
-        },
-        {
-            _id: "2",
-            from: {
-                _id: "2",
-                username: "janedoe",
-                profileImg: "/avatars/girl1.png",
-            },
-            type: "like",
-        },
-    ];
+    const queryClient = useQueryClient()
 
-    const deleteNotifications = () => {
-        alert("All notifications deleted");
-    };
+    const { data: notifications, isLoading } = useQuery({
+        queryKey: ["notifications"],
+        queryFn: async () => {
+            try {
+                const res = await fetch("/api/notification")
+                const data = await res.json()
+
+                if (!res.ok) {
+                    throw new Error(data.error || "Something went wrong");
+                }
+
+                return data
+            } catch (error) {
+                throw new Error(error);
+
+            }
+        }
+    })
+
+    const { mutate: deleteNotifications } = useMutation({
+        mutationFn: async () => {
+            try {
+                const res = await fetch("/api/notification", {
+                    method: "DELETE",
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || "Something went wrong");
+                return data;
+            } catch (error) {
+                throw new Error(error);
+            }
+        },
+        onSuccess: () => {
+            toast.success("Notifications deleted successfully");
+            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        },
+        onError: (error) => {
+            toast.error(error.message);
+        },
+    });
 
     return (
         <>
