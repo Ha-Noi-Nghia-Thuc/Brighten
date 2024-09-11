@@ -7,6 +7,7 @@ import notificationRoute from "./routes/notification.route.js";
 import connectDatabase from "./utils/connectDatabase.js";
 import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";
+import path from "path";
 
 dotenv.config();
 cloudinary.config({
@@ -17,6 +18,7 @@ cloudinary.config({
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const __dirname = path.resolve();
 
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -26,6 +28,14 @@ app.use("/api/auth", authRoute);
 app.use("/api/user", userRoute);
 app.use("/api/post", postRoute);
 app.use("/api/notification", notificationRoute);
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "/client/dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "client", "dist", "index.html"));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is up and running!`);
